@@ -1,0 +1,268 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="새 글 작성">
+  <section class="container-narrow py-12 md:py-20">
+    <!-- Auth Check -->
+    <div id="auth-check" class="text-center py-20">
+      <p class="text-secondary">로딩 중...</p>
+    </div>
+
+    <!-- Not Logged In -->
+    <div id="not-logged-in" class="hidden text-center py-20">
+      <h2 class="text-2xl font-serif font-bold text-primary mb-4">
+        로그인이 필요합니다
+      </h2>
+      <p class="text-secondary mb-6">
+        글을 작성하려면 로그인해주세요.
+      </p>
+      <a
+        href="/auth/login"
+        class="inline-block px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-accent transition-colors"
+      >
+        로그인하기
+      </a>
+    </div>
+
+    <!-- Form -->
+    <div id="form-container" class="hidden">
+      <h1 class="text-3xl font-serif font-bold text-primary mb-8">
+        새 글 작성
+      </h1>
+
+      <div id="error-message" class="hidden mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+      </div>
+
+      <form id="post-form" class="space-y-6">
+        <div>
+          <label for="title" class="block text-sm font-medium text-primary mb-2">
+            제목
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            maxlength="100"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-colors"
+            placeholder="제목을 입력하세요"
+          />
+        </div>
+
+        <div>
+          <label for="content" class="block text-sm font-medium text-primary mb-2">
+            내용
+          </label>
+          <textarea
+            id="content"
+            name="content"
+            required
+            rows="8"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-colors resize-none"
+            placeholder="내용을 입력하세요"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-primary mb-2">
+            이미지 (최대 5장)
+          </label>
+          <div
+            id="drop-zone"
+            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-accent transition-colors"
+          >
+            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="text-secondary mb-2">클릭하거나 이미지를 드래그하세요</p>
+            <p class="text-xs text-gray-400">JPG, PNG, WebP (최대 5MB)</p>
+            <input
+              type="file"
+              id="file-input"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              class="hidden"
+            />
+          </div>
+
+          <!-- Image Preview -->
+          <div id="image-preview" class="grid grid-cols-5 gap-3 mt-4">
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <button
+            type="submit"
+            id="submit-btn"
+            class="flex-1 py-3 bg-primary text-white rounded-lg font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            작성하기
+          </button>
+          <a
+            href="/community"
+            class="px-6 py-3 border border-gray-300 text-secondary rounded-lg font-medium hover:bg-gray-50 transition-colors text-center"
+          >
+            취소
+          </a>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center">
+          작성된 글은 관리자 검토 후 게시됩니다.
+        </p>
+      </form>
+    </div>
+
+    <!-- Success -->
+    <div id="success-message" class="hidden text-center py-20">
+      <div class="w-16 h-16 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-serif font-bold text-primary mb-4">
+        글이 등록되었습니다!
+      </h2>
+      <p class="text-secondary mb-6">
+        관리자 검토 후 커뮤니티에 게시됩니다.
+      </p>
+      <div class="flex gap-4 justify-center">
+        <a href="/mypage" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-accent transition-colors">
+          마이페이지로
+        </a>
+        <a href="/community" class="px-6 py-3 border border-gray-300 text-secondary rounded-full font-medium hover:bg-gray-50 transition-colors">
+          커뮤니티 보기
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { getUser, createPost, uploadImage } from '../../lib/supabase';
+
+  const authCheck = document.getElementById('auth-check');
+  const notLoggedIn = document.getElementById('not-logged-in');
+  const formContainer = document.getElementById('form-container');
+  const successMessage = document.getElementById('success-message');
+  const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+  const form = document.getElementById('post-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  const imagePreview = document.getElementById('image-preview');
+
+  let selectedFiles: File[] = [];
+
+  async function init() {
+    const user = await getUser();
+    authCheck?.classList.add('hidden');
+
+    if (!user) {
+      notLoggedIn?.classList.remove('hidden');
+      return;
+    }
+
+    formContainer?.classList.remove('hidden');
+  }
+
+  // File handling
+  dropZone?.addEventListener('click', () => fileInput?.click());
+
+  dropZone?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-accent', 'bg-accent/5');
+  });
+
+  dropZone?.addEventListener('dragleave', () => {
+    dropZone.classList.remove('border-accent', 'bg-accent/5');
+  });
+
+  dropZone?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-accent', 'bg-accent/5');
+    const files = Array.from(e.dataTransfer?.files || []);
+    handleFiles(files);
+  });
+
+  fileInput?.addEventListener('change', () => {
+    const files = Array.from(fileInput.files || []);
+    handleFiles(files);
+  });
+
+  function handleFiles(files: File[]) {
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+    const remaining = 5 - selectedFiles.length;
+    const newFiles = imageFiles.slice(0, remaining);
+
+    selectedFiles = [...selectedFiles, ...newFiles];
+    updatePreview();
+  }
+
+  function updatePreview() {
+    if (!imagePreview) return;
+
+    imagePreview.innerHTML = selectedFiles.map((file, index) => `
+      <div class="relative aspect-square">
+        <img src="${URL.createObjectURL(file)}" alt="" class="w-full h-full object-cover rounded-lg" />
+        <button
+          type="button"
+          data-index="${index}"
+          class="remove-image absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+        >
+          &times;
+        </button>
+      </div>
+    `).join('');
+
+    // Add remove handlers
+    document.querySelectorAll('.remove-image').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt((e.currentTarget as HTMLElement).dataset.index || '0');
+        selectedFiles.splice(index, 1);
+        updatePreview();
+      });
+    });
+  }
+
+  // Form submission
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMessage.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '업로드 중...';
+
+    try {
+      const formData = new FormData(form);
+      const title = formData.get('title') as string;
+      const content = formData.get('content') as string;
+
+      // Upload images
+      const imageUrls: string[] = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        submitBtn.textContent = `이미지 업로드 중 (${i + 1}/${selectedFiles.length})...`;
+        const url = await uploadImage(selectedFiles[i]);
+        imageUrls.push(url);
+      }
+
+      submitBtn.textContent = '저장 중...';
+
+      // Create post
+      const { data, error } = await createPost(title, content, imageUrls);
+
+      if (error) throw error;
+
+      // Show success
+      formContainer?.classList.add('hidden');
+      successMessage?.classList.remove('hidden');
+
+    } catch (err: any) {
+      errorMessage.textContent = err.message || '오류가 발생했습니다.';
+      errorMessage.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '작성하기';
+    }
+  });
+
+  init();
+</script>

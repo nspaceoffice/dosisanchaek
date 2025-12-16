@@ -16,7 +16,7 @@ const pathname = Astro.url.pathname;
       </a>
 
       <!-- Desktop Navigation -->
-      <div class="hidden md:flex items-center gap-8">
+      <div class="hidden md:flex items-center gap-6">
         <a
           href="/posts"
           class:list={[
@@ -26,19 +26,15 @@ const pathname = Astro.url.pathname;
         >
           전체 글
         </a>
-        {categories.slice(0, 4).map((category) => (
-          <a
-            href={`/category/${category.slug.current}`}
-            class:list={[
-              "text-sm font-medium transition-colors",
-              pathname === `/category/${category.slug.current}`
-                ? 'text-accent'
-                : 'text-secondary hover:text-primary'
-            ]}
-          >
-            {category.title}
-          </a>
-        ))}
+        <a
+          href="/community"
+          class:list={[
+            "text-sm font-medium transition-colors",
+            pathname.startsWith('/community') ? 'text-accent' : 'text-secondary hover:text-primary'
+          ]}
+        >
+          커뮤니티
+        </a>
         <a
           href="/about"
           class:list={[
@@ -48,6 +44,24 @@ const pathname = Astro.url.pathname;
         >
           소개
         </a>
+
+        <!-- Auth Buttons -->
+        <div class="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
+          <div id="auth-loading" class="text-sm text-gray-400">...</div>
+          <div id="auth-logged-out" class="hidden flex items-center gap-3">
+            <a href="/auth/login" class="text-sm font-medium text-secondary hover:text-primary transition-colors">
+              로그인
+            </a>
+            <a href="/auth/signup" class="text-sm font-medium px-4 py-1.5 bg-primary text-white rounded-full hover:bg-accent transition-colors">
+              회원가입
+            </a>
+          </div>
+          <div id="auth-logged-in" class="hidden flex items-center gap-3">
+            <a href="/mypage" class="text-sm font-medium text-secondary hover:text-primary transition-colors">
+              마이페이지
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Mobile Menu Button -->
@@ -66,25 +80,52 @@ const pathname = Astro.url.pathname;
     <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-100 pt-4">
       <div class="flex flex-col gap-4">
         <a href="/posts" class="text-sm font-medium text-secondary hover:text-primary">전체 글</a>
-        {categories.map((category) => (
-          <a
-            href={`/category/${category.slug.current}`}
-            class="text-sm font-medium text-secondary hover:text-primary"
-          >
-            {category.title}
-          </a>
-        ))}
+        <a href="/community" class="text-sm font-medium text-secondary hover:text-primary">커뮤니티</a>
         <a href="/about" class="text-sm font-medium text-secondary hover:text-primary">소개</a>
+        <div class="border-t border-gray-100 pt-4 mt-2">
+          <div id="mobile-auth-logged-out" class="hidden flex flex-col gap-3">
+            <a href="/auth/login" class="text-sm font-medium text-secondary hover:text-primary">로그인</a>
+            <a href="/auth/signup" class="text-sm font-medium text-secondary hover:text-primary">회원가입</a>
+          </div>
+          <div id="mobile-auth-logged-in" class="hidden">
+            <a href="/mypage" class="text-sm font-medium text-secondary hover:text-primary">마이페이지</a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
 </header>
 
 <script>
+  import { getUser } from '../lib/supabase';
+
   const menuButton = document.getElementById('mobile-menu-button');
   const mobileMenu = document.getElementById('mobile-menu');
 
   menuButton?.addEventListener('click', () => {
     mobileMenu?.classList.toggle('hidden');
   });
+
+  // Auth state
+  async function checkAuth() {
+    const authLoading = document.getElementById('auth-loading');
+    const authLoggedOut = document.getElementById('auth-logged-out');
+    const authLoggedIn = document.getElementById('auth-logged-in');
+    const mobileAuthLoggedOut = document.getElementById('mobile-auth-logged-out');
+    const mobileAuthLoggedIn = document.getElementById('mobile-auth-logged-in');
+
+    const user = await getUser();
+
+    authLoading?.classList.add('hidden');
+
+    if (user) {
+      authLoggedIn?.classList.remove('hidden');
+      mobileAuthLoggedIn?.classList.remove('hidden');
+    } else {
+      authLoggedOut?.classList.remove('hidden');
+      mobileAuthLoggedOut?.classList.remove('hidden');
+    }
+  }
+
+  checkAuth();
 </script>
