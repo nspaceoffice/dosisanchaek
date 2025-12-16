@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-primary bg-background antialiased;
+    font-feature-settings: 'ss01' on;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .container-wide {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+
+  .image-cover {
+    @apply w-full h-full object-cover;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+
+  .hover-opacity {
+    @apply transition-opacity duration-300 hover:opacity-80;
+  }
+
+  /* Magazine Grid */
+  .magazine-grid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(12, 1fr);
+  }
+
+  .magazine-grid > *:first-child {
+    grid-column: span 12;
+  }
+
+  @screen md {
+    .magazine-grid > *:first-child {
+      grid-column: span 8;
+      grid-row: span 2;
+    }
+
+    .magazine-grid > *:not(:first-child) {
+      grid-column: span 4;
+    }
+  }
+
+  /* Article Prose */
+  .prose-article {
+    @apply prose prose-lg max-w-none;
+    @apply prose-headings:font-serif prose-headings:text-primary;
+    @apply prose-p:text-secondary prose-p:leading-relaxed;
+    @apply prose-a:text-accent prose-a:no-underline hover:prose-a:underline;
+    @apply prose-img:rounded-lg prose-img:shadow-lg;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .aspect-magazine {
+    aspect-ratio: 3 / 4;
+  }
+
+  .aspect-wide {
+    aspect-ratio: 16 / 9;
+  }
+}

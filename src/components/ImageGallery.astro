@@ -1,0 +1,105 @@
+---
+import { urlFor } from '../lib/sanity';
+import type { SanityImageSource } from '@sanity/image-url/lib/types/types';
+
+interface GalleryImage {
+  asset: SanityImageSource;
+  alt?: string;
+}
+
+interface Props {
+  images: GalleryImage[];
+}
+
+const { images } = Astro.props;
+---
+
+{images && images.length > 0 && (
+  <div class="gallery my-12">
+    <div class:list={[
+      "grid gap-4",
+      images.length === 1 ? "grid-cols-1" :
+      images.length === 2 ? "grid-cols-2" :
+      images.length === 3 ? "grid-cols-2 md:grid-cols-3" :
+      "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+    ]}>
+      {images.map((image, index) => {
+        const imageUrl = urlFor(image)
+          .width(800)
+          .height(600)
+          .format('webp')
+          .url();
+
+        return (
+          <div
+            class:list={[
+              "relative overflow-hidden rounded-lg cursor-pointer group",
+              index === 0 && images.length > 2 ? "col-span-2 row-span-2" : "",
+              "aspect-[4/3]"
+            ]}
+            data-gallery-item
+            data-src={urlFor(image).width(1920).format('webp').url()}
+          >
+            <img
+              src={imageUrl}
+              alt={image.alt || `갤러리 이미지 ${index + 1}`}
+              class="image-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+              <svg class="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+<!-- Lightbox -->
+<div id="lightbox" class="fixed inset-0 z-50 hidden bg-black/95 items-center justify-center">
+  <button id="lightbox-close" class="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+  <img id="lightbox-image" src="" alt="" class="max-w-[90vw] max-h-[90vh] object-contain" />
+</div>
+
+<script>
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImage = document.getElementById('lightbox-image') as HTMLImageElement;
+  const lightboxClose = document.getElementById('lightbox-close');
+  const galleryItems = document.querySelectorAll('[data-gallery-item]');
+
+  galleryItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      const src = item.getAttribute('data-src');
+      if (src && lightbox && lightboxImage) {
+        lightboxImage.src = src;
+        lightbox.classList.remove('hidden');
+        lightbox.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  });
+
+  function closeLightbox() {
+    if (lightbox) {
+      lightbox.classList.add('hidden');
+      lightbox.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+  }
+
+  lightboxClose?.addEventListener('click', closeLightbox);
+  lightbox?.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>

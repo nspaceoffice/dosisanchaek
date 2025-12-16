@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getAllCategories, getPostsByCategory } from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const categories = await getAllCategories();
+  return categories.map((category) => ({
+    params: { slug: category.slug.current },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const posts = await getPostsByCategory(category.slug.current);
+const allCategories = await getAllCategories();
+---
+
+<BaseLayout
+  title={category.title}
+  description={category.description || `${category.title} 카테고리의 모든 글`}
+>
+  <section class="container-wide py-12 md:py-20">
+    <!-- Header -->
+    <div class="mb-12">
+      <nav class="text-sm text-secondary mb-4">
+        <a href="/" class="hover:text-primary">홈</a>
+        <span class="mx-2">/</span>
+        <a href="/posts" class="hover:text-primary">전체 글</a>
+        <span class="mx-2">/</span>
+        <span class="text-primary">{category.title}</span>
+      </nav>
+
+      <h1 class="text-4xl md:text-5xl font-serif font-bold text-primary mb-4">
+        {category.title}
+      </h1>
+      {category.description && (
+        <p class="text-lg text-secondary max-w-2xl">
+          {category.description}
+        </p>
+      )}
+    </div>
+
+    <!-- Category Filter -->
+    <div class="flex flex-wrap gap-3 mb-10">
+      <a
+        href="/posts"
+        class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-secondary hover:bg-gray-200 transition-colors"
+      >
+        전체
+      </a>
+      {allCategories.map((cat) => (
+        <a
+          href={`/category/${cat.slug.current}`}
+          class:list={[
+            "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+            cat._id === category._id
+              ? "bg-primary text-white"
+              : "bg-gray-100 text-secondary hover:bg-gray-200"
+          ]}
+        >
+          {cat.title}
+        </a>
+      ))}
+    </div>
+
+    <!-- Posts Grid -->
+    {posts.length > 0 ? (
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20">
+        <p class="text-secondary text-lg">
+          이 카테고리에 작성된 글이 없습니다.
+        </p>
+        <a
+          href="/posts"
+          class="inline-block mt-4 text-accent hover:underline"
+        >
+          전체 글 보기
+        </a>
+      </div>
+    )}
+  </section>
+</BaseLayout>

@@ -1,0 +1,42 @@
+---
+interface Props {
+  url: string;
+  title?: string;
+}
+
+const { url, title = '동영상' } = Astro.props;
+
+function getEmbedUrl(url: string): string | null {
+  // YouTube
+  const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0`;
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  return null;
+}
+
+const embedUrl = getEmbedUrl(url);
+---
+
+{embedUrl && (
+  <div class="video-embed my-8">
+    <div class="aspect-wide rounded-lg overflow-hidden bg-gray-100 shadow-lg">
+      <iframe
+        src={embedUrl}
+        title={title}
+        class="w-full h-full"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        loading="lazy"
+      />
+    </div>
+  </div>
+)}

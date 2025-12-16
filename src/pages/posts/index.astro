@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getAllPosts, getAllCategories } from '../../lib/sanity';
+
+const posts = await getAllPosts();
+const categories = await getAllCategories();
+---
+
+<BaseLayout title="전체 글" description="도시산책의 모든 이야기를 만나보세요">
+  <section class="container-wide py-12 md:py-20">
+    <!-- Header -->
+    <div class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-serif font-bold text-primary mb-4">
+        전체 글
+      </h1>
+      <p class="text-lg text-secondary">
+        도시산책의 모든 이야기를 만나보세요
+      </p>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="flex flex-wrap gap-3 mb-10">
+      <a
+        href="/posts"
+        class="px-4 py-2 rounded-full text-sm font-medium bg-primary text-white"
+      >
+        전체
+      </a>
+      {categories.map((category) => (
+        <a
+          href={`/category/${category.slug.current}`}
+          class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-secondary hover:bg-gray-200 transition-colors"
+        >
+          {category.title}
+        </a>
+      ))}
+    </div>
+
+    <!-- Posts Grid -->
+    {posts.length > 0 ? (
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20">
+        <p class="text-secondary text-lg">아직 작성된 글이 없습니다.</p>
+      </div>
+    )}
+  </section>
+</BaseLayout>
