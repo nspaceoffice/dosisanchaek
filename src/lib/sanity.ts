@@ -2,16 +2,22 @@ import { createClient } from '@sanity/client';
 import imageUrlBuilder from '@sanity/image-url';
 import type { SanityImageSource } from '@sanity/image-url/lib/types/types';
 
-export const sanityClient = createClient({
-  projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
-  dataset: import.meta.env.PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION || '2024-01-01',
-  useCdn: true,
-});
+const projectId = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
+const isSanityConfigured = projectId && projectId !== 'your_project_id';
 
-const builder = imageUrlBuilder(sanityClient);
+export const sanityClient = isSanityConfigured
+  ? createClient({
+      projectId,
+      dataset: import.meta.env.PUBLIC_SANITY_DATASET || 'production',
+      apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION || '2024-01-01',
+      useCdn: true,
+    })
+  : null;
+
+const builder = sanityClient ? imageUrlBuilder(sanityClient) : null;
 
 export function urlFor(source: SanityImageSource) {
+  if (!builder) return { url: () => '/placeholder.jpg', width: () => ({ height: () => ({ format: () => ({ url: () => '/placeholder.jpg' }) }) }) };
   return builder.image(source);
 }
 
@@ -47,6 +53,7 @@ export interface Author {
 
 // Queries
 export async function getAllPosts(): Promise<Post[]> {
+  if (!sanityClient) return [];
   return await sanityClient.fetch(`
     *[_type == "post"] | order(publishedAt desc) {
       _id,
@@ -64,6 +71,7 @@ export async function getAllPosts(): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
+  if (!sanityClient) return null;
   const posts = await sanityClient.fetch(`
     *[_type == "post" && slug.current == $slug][0] {
       _id,
@@ -84,6 +92,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 }
 
 export async function getFeaturedPosts(): Promise<Post[]> {
+  if (!sanityClient) return [];
   return await sanityClient.fetch(`
     *[_type == "post"] | order(publishedAt desc)[0...4] {
       _id,
@@ -98,6 +107,7 @@ export async function getFeaturedPosts(): Promise<Post[]> {
 }
 
 export async function getPostsByCategory(categorySlug: string): Promise<Post[]> {
+  if (!sanityClient) return [];
   return await sanityClient.fetch(`
     *[_type == "post" && category->slug.current == $categorySlug] | order(publishedAt desc) {
       _id,
@@ -113,6 +123,7 @@ export async function getPostsByCategory(categorySlug: string): Promise<Post[]> 
 }
 
 export async function getAllCategories(): Promise<Category[]> {
+  if (!sanityClient) return [];
   return await sanityClient.fetch(`
     *[_type == "category"] | order(title asc) {
       _id,

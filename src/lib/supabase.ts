@@ -1,9 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('your-project');
+
+export const supabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Types
 export interface User {
@@ -32,6 +36,7 @@ export interface CommunityPost {
 
 // Auth functions
 export async function signUp(email: string, password: string, name: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase not configured') };
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -43,6 +48,7 @@ export async function signUp(email: string, password: string, name: string) {
 }
 
 export async function signIn(email: string, password: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase not configured') };
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -51,17 +57,20 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
+  if (!supabase) return { error: null };
   const { error } = await supabase.auth.signOut();
   return { error };
 }
 
 export async function getUser() {
+  if (!supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
 
 // Community Post functions
 export async function createPost(title: string, content: string, images: string[]) {
+  if (!supabase) throw new Error('Supabase not configured');
   const user = await getUser();
   if (!user) throw new Error('로그인이 필요합니다.');
 
@@ -81,6 +90,7 @@ export async function createPost(title: string, content: string, images: string[
 }
 
 export async function getMyPosts() {
+  if (!supabase) return { data: [], error: null };
   const user = await getUser();
   if (!user) return { data: [], error: null };
 
@@ -94,6 +104,7 @@ export async function getMyPosts() {
 }
 
 export async function getApprovedPosts() {
+  if (!supabase) return { data: [], error: null };
   const { data, error } = await supabase
     .from('community_posts')
     .select(`
@@ -108,6 +119,7 @@ export async function getApprovedPosts() {
 
 // Image upload
 export async function uploadImage(file: File) {
+  if (!supabase) throw new Error('Supabase not configured');
   const user = await getUser();
   if (!user) throw new Error('로그인이 필요합니다.');
 
